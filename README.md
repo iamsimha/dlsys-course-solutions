@@ -1,4 +1,4 @@
-# dlysys-course-solutions
+# dlsys-course-solutions
 
 This repository contains my solutions to the programming assignments of dlsys-course.
 
