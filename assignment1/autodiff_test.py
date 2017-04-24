@@ -199,23 +199,14 @@ def test_matmul_two_vars():
     assert np.array_equal(grad_x2_val, expected_grad_x2_val)
     assert np.array_equal(grad_x3_val, expected_grad_x3_val)
 
-def test_mat_add():
-    x1 = ad.Variable(name = "x1")
-    x2 = ad.Variable(name = "x2")
-    y = ad.matadd_op(2 * x1, x2)
-    grad_y_x1, = ad.gradients(y, [x1])
-    executor = ad.Executor([y, grad_y_x1])
-
-    x1_val = np.ones((10, 10))
-    x2_val = 2 * np.ones((10, 10))
-    y_val, grad_y_x1_val = executor.run(feed_dict={x1:x1_val, x2:x2_val})
-    assert np.array_equal(y_val, 4 * np.ones((10, 10)))
-    assert np.array_equal(grad_y_x1_val, 2 * np.ones((10, 10)))
+###############################################################
+#############     Additional Tests                 ############
+###############################################################
 
 def test_log():
     x1 = ad.Variable(name = "x1")
     x2 = ad.Variable(name = "x2")
-    y = ad.log(x1) / x2
+    y = ad.log_op(x1) / x2
     grad_y, = ad.gradients(y, [x1])
 
     x1_val = 2 * np.ones((2, 1))
@@ -228,7 +219,7 @@ def test_log():
 
 def test_exp():
     x1 = ad.Variable(name = "x1")
-    y = 1 + 2 * ad.exp(ad.log(x1))
+    y = 1 + 2 * ad.exp_op(ad.log_op(x1))
 
     x1_val = np.ones((2, 1))
     grad_y, = ad.gradients(y, [x1])
@@ -237,4 +228,27 @@ def test_exp():
     assert np.array_equal(y_val, 3 * np.ones_like(y_val))
     assert np.array_equal(grad_y_val, 2 * np.ones_like(grad_y_val))
 
-test_mat_add()
+def test_sub():
+    x1 = ad.Variable(name = "x1")
+    x2 = ad.Variable(name = "x2")
+    y_node = x1 - x2
+    y_const = x1 - 3.0
+    y_rev_const = 3.0 - x2
+
+    grad_y_node_x1, grad_y_node_x2 = ad.gradients(y_node, [x1, x2])
+    grad_y_const_x1, = ad.gradients(y_const, [x1])
+    grad_y_rev_const_x2, = ad.gradients(y_rev_const, [x2])
+
+    x1_val = np.ones((1, 3))
+    x2_val = 2 * np.ones((1, 3))
+    executor = ad.Executor([y_node, y_const, y_rev_const,
+        grad_y_node_x1, grad_y_node_x2, grad_y_const_x1, grad_y_rev_const_x2])
+    y_node_val, y_const_val, y_rev_const_val, grad_y_node_x1_val, grad_y_node_x2_val, grad_y_const_x1_val, grad_y_rev_const_x2_val = executor.run(feed_dict={x1:x1_val, x2:x2_val})
+    np.array_equal(y_node_val, -1.0 * np.ones_like(y_node_val))
+    np.array_equal(y_const_val, -2.0 * np.ones_like(y_const_val))
+    np.array_equal(y_rev_const_val, 2.0 * np.ones_like(y_rev_const_val))
+
+    np.array_equal(grad_y_node_x1_val, np.ones_like(grad_y_node_x1_val))
+    np.array_equal(grad_y_node_x2_val, -1.0 * np.ones_like(grad_y_node_x2_val))
+    np.array_equal(grad_y_const_x1_val, np.ones_like(grad_y_const_x1_val))
+    np.array_equal(grad_y_rev_const_x2_val, -1.0 * np.ones_like(grad_y_rev_const_x2_val))

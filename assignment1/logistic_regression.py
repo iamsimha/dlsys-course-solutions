@@ -1,17 +1,41 @@
 import numpy as np
 import autodiff as ad
 
+
+
 x = ad.Variable(name = "x")
 w = ad.Variable(name = "w")
 b = ad.Variable(name = "b")
 labels = ad.Variable(name = "lables")
 
-y = ad.matmul_op(w, x) + b
-
-# loss = ad.reduce_sum(ad.log( 1.0 / 1 + ad.exp(-1.0 * labels * (ad.matmul_op(w, x) + b)) ))
 
 
-# class_1 = np.random.normal(2, 0.1, (100, 2))
-# class_2 = np.random.normal(4, 0.1, (100, 2))
-# x_val = np.concatenate((class_1, class_2), axis = 0)
-# y_val = np.concatenate((np.zeros_like(class_1), np.ones_like(class_2)), axis=0)
+p = 1.0 / (1.0 + ad.exp_op((-1.0 * ad.matmul_op(w, x))))
+
+loss = -1.0 * ad.reduce_sum_op(labels * ad.log_op(p) + (1.0 - labels) * ad.log_op(1.0 - p), axis = 1)
+
+grad_y_w, = ad.gradients(loss, [w])
+
+
+
+num_features = 2
+num_points = 200
+num_iterations = 1000
+learning_rate = 0.01
+
+class_1 = np.random.normal(2, 0.1, (num_points / 2, num_features))
+class_2 = np.random.normal(4, 0.1, (num_points / 2, num_features))
+x_val = np.concatenate((class_1, class_2), axis = 0).T
+
+x_val = np.concatenate((x_val, np.ones((1, num_points))), axis = 0)
+w_val = np.random.normal(size = (1, num_features + 1))
+
+
+labels_val = np.concatenate((np.zeros((class_1.shape[0], 1)), np.ones((class_2.shape[0], 1))), axis=0).T
+executor = ad.Executor([loss, grad_y_w])
+
+for i in xrange(100000):
+	loss_val, grad_y_w_val =  executor.run(feed_dict={x:x_val, w:w_val, labels:labels_val})
+	w_val = w_val - learning_rate * grad_y_w_val
+	if i % 1000 == 0:
+		print loss_val
