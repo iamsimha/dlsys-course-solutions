@@ -14,17 +14,6 @@ def test_identity():
     assert np.array_equal(y_val, x2_val)
     assert np.array_equal(grad_x2_val, np.ones_like(x2_val))
 
-
-def test_identity_simple():
-    x2 = ad.Variable(name = "x2")
-    y = x2 + 3
-    executor = ad.Executor([y])
-    x2_val = 2 * np.ones(3)
-    y_val, = executor.run(feed_dict = {x2 : x2_val})
-
-    assert isinstance(y, ad.Node)
-    assert np.array_equal(y_val, x2_val + 3)
-
 def test_add_by_const():
     x2 = ad.Variable(name = "x2")
     y = 5 + x2
