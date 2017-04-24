@@ -9,5 +9,5 @@ dlsys-course webpag : http://dlsys.cs.washington.edu/
 ## Assignment 1
 
 The problem statement is to complete a code snippet
-..* which implements automatic differentiation.
-..* Implement logistic regression loop with autodiff.
+1. which implements automatic differentiation.
+2. Implement logistic regression loop with autodiff.
